@@ -2,6 +2,7 @@
 Support for Brother QL Label Printers
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -11,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_UNKNOWN)
 
-REQUIREMENTS = ['pysnmp==4.3.9', 'brother_ql=0.7.5']
+REQUIREMENTS = ['pysnmp==4.3.9', 'brother_ql==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
