@@ -20,7 +20,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Brother QL'
 DEFAULT_PORT = '161'
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -61,7 +61,7 @@ class BrotherQLSensor(Entity):
         self.data = data
         self._name = name
         self._state = None
-        self._unit_of_measurement = 'mm'
+        self._unit_of_measurement = None
 
     @property
     def name(self):
@@ -92,7 +92,7 @@ class BrotherQLSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._state = self.data.media_width
+        self._state = self.data.state
 
 
 class BrotherQLData(object):
@@ -134,10 +134,17 @@ class BrotherQLData(object):
         else:
             assert len(restable) == 1
             status = interpret_response(bytes(restable[0][1]))
-            self.state = status['media_width']
             self.media_type = status['media_type']
             self.media_width = '{} mm'.format(status['media_width'])
             self.media_length = status['media_length'] or 'endless'
             self.phase = status['phase_type']
-            self.errors = status['errors'] or '-none-'
+            self.errors = ', '.join(status['errors']) or '-none-'
+            if status['errors']:
+                self.state = 'error'
+            elif 'waiting' in status['phase_type'].lower():
+                self.state = 'idle'
+            elif 'printing' in status['phase_type'].lower():
+                self.state = 'printing'
+            else:
+                self.state = STATE_UNKNOWN
 
